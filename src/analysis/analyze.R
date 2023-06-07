@@ -1,11 +1,44 @@
-# load 
-load("./gen/analysis/input/data_cleaned.RData")
+library(fixest)
+library(broom)
+library(tidyr)
+library(ggplot2)
+library(readr)
+library(data.table)
+library(stargazer)
 
-# Estimate model 1 
-m1 <- lm(V1 ~ V3 + V4,df_cleaned)
+#create directories 
+dir.create('../../gen/output')
+dir.create('../../gen/output/regression')
 
-# Estimate model 2 
-m2 <- lm(V1 ~ V3 + V4 + V5 , df_cleaned)
+#import data 
+Mexico_cleaned <- read_csv("../../data/Mexico/Mexico_cleaned.csv")
+Dallas_cleaned <- read_csv("../../data/Dallas/Dallas_cleaned.csv")
+Chicago_cleaned <- read_csv("../../data/Chicago/Chicago_cleaned.csv")
 
-# Save results
-save(m1,m2,file="./gen/analysis/output/model_results.RData")
+#run regressions 
+Dallas_reg <-   lm(price ~ DuringConcert +
+                          distance + room_type +
+                          accommodates, 
+                        data = Dallas_cleaned)
+
+Chicago_reg <-   lm(price ~ DuringConcert +
+                         distance + room_type +
+                         accommodates, 
+                       data = Chicago_cleaned)
+
+Mexico_reg <-   lm(price ~ DuringConcert+
+                        distance + room_type +
+                        accommodates, 
+                      data = Mexico_cleaned)
+
+
+stargazer(Mexico_reg, Dallas_reg, Chicago_reg, 
+          type="html",
+          title="Effect of date, distance, and room type ",
+          dep.var.caption = 'Price in dollars',
+          dep.var.labels= '',
+          column.labels = c('Mexico', 'Dallas', "Chicago"),
+          covariate.labels = c('During concert', 'Distance', 'Private room', 'Shared room', 'accommodates'),
+          notes.label = 'Significance levels',
+          out='../../gen/output/regression/regression_table.txt')
+
